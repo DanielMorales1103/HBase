@@ -4,7 +4,7 @@ from utils import load_initial_data
 
 def main():
     simulator = HBaseSimulator()
-    load_initial_data(simulator, "../data/initial_data.json")  # Asegúrate de tener la ruta correcta al archivo JSON
+    load_initial_data(simulator, "../data/initial_data.json") 
     cli = CommandLineInterface(simulator)
     cli.run()
 

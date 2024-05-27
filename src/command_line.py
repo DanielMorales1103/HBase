@@ -25,7 +25,6 @@ class CommandLineInterface:
             column_families = column_families.split(',')
             try:
                 self.simulator.create_table(table_name, column_families)
-                print(f"Table '{table_name}' created with column families {column_families}.")
             except ValueError as e:
                 print(e)
         elif cmd == "help":
@@ -37,31 +36,33 @@ class CommandLineInterface:
             table_name, row_key, column_family, column, value, timestamp = args
             try:
                 self.simulator.put(table_name, row_key, column_family, column, value, timestamp)
-                print(f"Inserted value '{value}' at {table_name}.{row_key}.{column_family}.{column} with timestamp {timestamp}.")
             except ValueError as e:
                 print(e)
-        elif cmd == "get" and len(args) == 4:
-            table_name, row_key, column_family, column = args
-            result = self.simulator.get(table_name, row_key, column_family, column)
-            if result:
-                value, timestamp = result
-                print(f"Value: {value}, Timestamp: {timestamp}")
+        elif cmd == "get":
+            if len(args) != 4:
+                print("Usage: get [table_name] [row_key] [column_family] [column]")
             else:
-                print("No data found.")
+                value, timestamp = self.simulator.get(*args)
+                if value is not None:
+                    print(f"Value: {value}, Timestamp: {timestamp}")
+                else:
+                    print("No data found.")
         elif cmd == "scan":
             if len(args) != 1:
                 print("Usage: scan [table_name]")
             else:
-                try:
-                    data = self.simulator.scan(args[0])
-                    for column_family, rows in data.items():
-                        print(f"Column Family: {column_family}")
-                        for row_key, columns in rows.items():
+                table_name = args[0]
+                data = self.simulator.scan(table_name)
+                if data:
+                    print(f"Scanning table '{table_name}':")
+                    for family in data:
+                        print(f"Column Family: '{family}'")
+                        for row_key, columns in data[family].items():
                             print(f"  Row Key: {row_key}")
                             for column, (value, timestamp) in columns.items():
                                 print(f"    Column: {column}, Value: {value}, Timestamp: {timestamp}")
-                except ValueError as e:
-                    print(e)
+                else:
+                    print("No data found.")
         elif cmd == "disable":
             if len(args) != 1:
                 print("Usage: disable [table_name]")
@@ -85,7 +86,6 @@ class CommandLineInterface:
                 try:
                     enabled = self.simulator.is_enabled(args[0])
                     state = "enabled" if enabled else "disabled"
-                    print(f"Table '{args[0]}' is {state}.")
                 except ValueError as e:
                     print(e)
         elif cmd == "truncate":
@@ -103,7 +103,6 @@ class CommandLineInterface:
                 try:
                     table_name = args[0]
                     self.simulator.drop_table(table_name)
-                    print(f"Table '{table_name}' has been successfully dropped.")
                 except ValueError as e:
                     print(e)
         elif cmd == "alter":
@@ -128,6 +127,30 @@ class CommandLineInterface:
                     self.simulator.describe_table(args[0])
                 except ValueError as e:
                     print(e)
+        elif cmd == "delete":
+            if len(args) != 4:
+                print("Usage: delete [table_name] [row_key] [column_family] [column]")
+            else:
+                try:
+                    self.simulator.delete(*args)
+                except ValueError as e:
+                    print(e)
+        elif cmd == "deleteall":
+            if len(args) != 2:
+                print("Usage: deleteall [table_name] [row_key]")
+            else:
+                try:
+                    self.simulator.delete_all(args[0], args[1])
+                except ValueError as e:
+                    print(e)
+        elif cmd == "count":
+            if len(args) != 1:
+                print("Usage: count [table_name]")
+            else:
+                try:
+                    self.simulator.count_rows(args[0])
+                except ValueError as e:
+                    print(e)
         else:
             print("Unknown command or incorrect number of arguments. Type 'help' for a list of commands.")
 
@@ -146,6 +169,9 @@ class CommandLineInterface:
         - drop [table_name]: Drop a table.
         - drop_all: Drop all tables.
         - describe [table_name]: Describe a table.
+        - delete [table_name] [row_key] [column_family] [column]: Delete a specific column.
+        - deleteall [table_name] [row_key]: Delete all columns in a specific row.
+        - count [table_name]: Count the number of rows in a table.
         - exit: Exit the CLI.
         """
         print(help_text)
