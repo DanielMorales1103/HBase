@@ -78,11 +78,15 @@ class HBaseSimulator:
         
     def truncate_table(self, table_name):
         self.check_table_exists(table_name)
-        print(f"Starting truncate operation on table '{table_name}'.")
+        text = f"Starting truncate operation on table '{table_name}'.\n"
         self.disable_table(table_name)
+        text += f"Table '{table_name}' has been disabled.\n"
+        column_families = list(self.tables[table_name].keys())
         self.drop_table(table_name)
-        self.create_table(table_name, [])  # Assuming no column families are specified
-        print(f"Table '{table_name}' has been truncated and recreated.")
+        text += f"Table '{table_name}' has been dropped.\n"
+        self.create_table(table_name, column_families)
+        text += f"Table '{table_name}' has been truncated and recreated with column families {column_families}.\n"
+        return text
         
     def alter_table(self, table_name, operation, column_family):
         self.check_table_enabled(table_name)

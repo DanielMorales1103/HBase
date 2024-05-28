@@ -20,6 +20,8 @@ class HBaseGUI:
         self.command_entry = tk.Entry(self.command_frame, width=70)
         self.command_entry.pack(side=tk.LEFT, padx=5)
         self.command_entry.bind("<Return>", self.run_command)
+        
+        self.setup_gui(root)
 
         self.result_frame = tk.Frame(root)
         self.result_frame.pack(pady=10, fill=tk.BOTH, expand=True)
@@ -98,8 +100,8 @@ class HBaseGUI:
                 state = "enabled" if enabled else "disabled"
                 self.result_text.insert(tk.END, f"Table '{args[0]}' is {state}.\n")
             elif cmd == "truncate" and len(args) == 1:
-                self.simulator.truncate_table(args[0])
-                self.result_text.insert(tk.END, f"Table '{args[0]}' has been truncated and recreated.\n")
+                text = self.simulator.truncate_table(args[0])
+                self.result_text.insert(tk.END, text)
             elif cmd == "drop" and len(args) == 1:
                 self.simulator.drop_table(args[0])
                 self.result_text.insert(tk.END, f"Table '{args[0]}' has been dropped.\n")
@@ -130,6 +132,50 @@ class HBaseGUI:
         except ValueError as e:
             self.result_text.insert(tk.END, f"Error: {e}\n")
 
+    def setup_gui(self, root):
+        self.insert_many_button = tk.Button(self.command_frame, text="Insert Many", command=self.insert_many)
+        self.insert_many_button.pack(side=tk.LEFT, padx=10)
+
+        self.update_button = tk.Button(self.command_frame, text="Update", command=self.update_data)
+        self.update_button.pack(side=tk.RIGHT, padx=10)
+    
+    def insert_many(self):
+        self.result_text.delete(1.0, tk.END)
+        self.clear_table()
+        self.tree.pack_forget()  # Oculta la tabla
+        self.result_text.pack(fill=tk.BOTH, expand=True) 
+        student_data = [
+            ("502", "personal_info", "name", "Bob", "20220102"),
+            ("502", "personal_info", "age", "20", "20220102"),
+            ("503", "personal_info", "name", "Charlie", "20220103"),
+            ("503", "personal_info", "age", "22", "20220103"),
+            ("504", "personal_info", "name", "David", "20220104"),
+            ("504", "personal_info", "age", "21", "20220104"),
+            ("505", "personal_info", "name", "Eva", "20220105"),
+            ("505", "personal_info", "age", "23", "20220105"),
+            ("506", "personal_info", "name", "Fiona", "20220106"),
+            ("506", "personal_info", "age", "24", "20220106")
+        ]
+        for row_key, column_family, column, value, timestamp in student_data:
+            self.simulator.put("students", row_key, column_family, column, value, timestamp)
+        self.result_text.insert(tk.END, "Multiple student records inserted successfully.\n")
+
+    def update_data(self):
+        self.result_text.delete(1.0, tk.END)
+        self.clear_table()
+        self.tree.pack_forget()  # Oculta la tabla
+        self.result_text.pack(fill=tk.BOTH, expand=True) 
+        updated_student_data = [
+            ("502", "personal_info", "age", "21", "20230102"),
+            ("503", "personal_info", "age", "23", "20230103"),
+            ("504", "personal_info", "age", "22", "20230104"),
+            ("505", "personal_info", "age", "24", "20230105"),
+            ("506", "personal_info", "age", "25", "20230106")
+        ]
+        for row_key, column_family, column, new_value, timestamp in updated_student_data:
+            self.simulator.put("students", row_key, column_family, column, new_value, timestamp)
+        self.result_text.insert(tk.END, "Student records updated successfully.\n")
+    
     def display_table(self, columns, rows):
         self.tree["columns"] = columns
         for col in columns:
