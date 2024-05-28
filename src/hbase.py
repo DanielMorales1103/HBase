@@ -121,6 +121,7 @@ class HBaseSimulator:
         description += f"Status: {status}"
 
         print(description)
+        return description
     
     def delete(self, table_name, row_key, column_family, column):
         self.check_table_enabled(table_name)

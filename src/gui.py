@@ -111,7 +111,11 @@ class HBaseGUI:
                 self.simulator.drop_all_tables()
                 self.result_text.insert(tk.END, "All tables have been dropped.\n")
             elif cmd == "describe" and len(args) == 1:
-                self.simulator.describe_table(args[0])
+                try:
+                    description = self.simulator.describe_table(args[0])
+                    self.result_text.insert(tk.END, description)
+                except ValueError as e:
+                    self.result_text.insert(tk.END, f"Error: {str(e)}\n")
             elif cmd == "delete" and len(args) == 4:
                 self.simulator.delete(*args)
                 self.result_text.insert(tk.END, f"Deleted column '{args[3]}' from row '{args[1]}' in table '{args[0]}'.\n")
